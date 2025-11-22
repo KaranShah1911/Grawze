@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from 'react';
 import WalletSummary from '@/components/dashboard/WalletSummary';
 import TransactionList from '@/components/dashboard/TransactionList';
 import BehaviorChart from '@/components/dashboard/BehaviorChart';
+import DebugTransaction from '@/components/DebugTransaction';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const { isConnected } = useAccount();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!isConnected) {
     return (
@@ -23,7 +26,11 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <Button onClick={() => setIsModalOpen(true)}>Make a Transaction</Button>
+      </div>
+      {isModalOpen && <DebugTransaction onClose={() => setIsModalOpen(false)} />}
       <div className="grid gap-8">
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-1">

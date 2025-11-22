@@ -26,6 +26,20 @@ const polygonAmoy = {
   testnet: true,
 };
 
+const ganacheLocal = {
+  id: 1337,
+  name: "Ganache Local",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["http://127.0.0.1:7545"] },
+    public: { http: ["http://127.0.0.1:7545"] },
+  },
+  blockExplorers: {
+    default: { name: "Ganache Explorer", url: "http://127.0.0.1:7545" },
+  },
+  testnet: true,
+};
+
 // Use your WalletConnect project ID
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID!;
 
@@ -33,7 +47,7 @@ const projectId = process.env.NEXT_PUBLIC_PROJECT_ID!;
 export const config = getDefaultConfig({
   appName: "Web3.0 Auth",
   projectId: projectId,
-  chains: [polygonAmoy, sepolia, lineaTestnet, avalanche, polygon, mainnet],
+  chains: [polygonAmoy, sepolia, lineaTestnet, avalanche, polygon, mainnet, ganacheLocal],
   wallets: [
     {
       groupName: "Other",
