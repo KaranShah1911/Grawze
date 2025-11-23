@@ -8,6 +8,7 @@ import DebugTransaction from '@/components/DebugTransaction';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Send } from 'lucide-react';
 
 export default function DashboardPage() {
   const { isConnected } = useAccount();
@@ -28,7 +29,10 @@ export default function DashboardPage() {
     <div className="container mx-auto p-4 md:p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button onClick={() => setIsModalOpen(true)}>Make a Transaction</Button>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Send className="h-4 w-4 mr-2" />
+          Make a Transaction
+        </Button>
       </div>
       {isModalOpen && <DebugTransaction onClose={() => setIsModalOpen(false)} />}
       <div className="grid gap-8">

@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useAccount, useConnect, useDisconnect, useWalletClient } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { X } from 'lucide-react';
 
 interface DebugTransactionProps {
     onClose: () => void;
@@ -99,45 +103,43 @@ export default function DebugTransaction({ onClose }: DebugTransactionProps) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-gray-900 text-white font-sans text-center p-8 rounded-lg shadow-lg max-w-lg w-full relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
-                <h1 className="text-3xl font-bold mb-4">🛠️ Data & Wallet Debugger</h1>
-                <p className="mb-6">This tool bypasses the AI Model completely.</p>
-
-                {!isConnected ? (
-                    <button onClick={handleConnect} className="px-6 py-3 text-lg cursor-pointer bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
-                        Connect MetaMask
-                    </button>
-                ) : (
-                    <div className="space-y-4">
-                        <p>Connected: <span className="text-cyan-400">{address ? `${address.substring(0, 6)}...` : ''}</span></p>
-                        
-                        <input 
-                            type="text" 
-                            value={toAddr}
-                            onChange={(e) => setToAddr(e.target.value)}
-                            placeholder="Receiver Address (0x...)" 
-                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        <input 
-                            type="text" 
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Amount (ETH)" 
-                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        
-                        <button onClick={debugAndSend} className="w-full py-3 bg-green-600 text-white rounded-md text-lg cursor-pointer hover:bg-green-700 transition-colors">
-                            Print Data & Send Money 🚀
-                        </button>
-                        
-                        <p className="text-sm text-yellow-400">⚠️ Open Console (F12) to see the Data!</p>
-                    </div>
-                )}
-
-                <p className="mt-6 text-gray-400 h-6">{status}</p>
-            </div>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+            <Card className="w-full max-w-md relative">
+                <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4">
+                    <X className="h-4 w-4" />
+                </Button>
+                <CardHeader className="text-center">
+                    <CardTitle className="text-2xl font-bold">Make a Transaction</CardTitle>
+                    <CardDescription>Leveraging our AI Model to risk out your transaction with fraudulent.</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                    {!isConnected ? (
+                        <Button onClick={handleConnect} size="lg">
+                            Connect MetaMask
+                        </Button>
+                    ) : (
+                        <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">Connected as <span className="font-mono text-primary">{address ? `${address.substring(0, 6)}...${address.slice(-4)}` : ''}</span></p>
+                            <Input
+                                type="text"
+                                value={toAddr}
+                                onChange={(e) => setToAddr(e.target.value)}
+                                placeholder="Receiver Address (0x...)"
+                            />
+                            <Input
+                                type="text"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="Amount (ETH)"
+                            />
+                            <Button onClick={debugAndSend} className="w-full" size="lg">
+                                Send Money
+                            </Button>
+                        </div>
+                    )}
+                    <p className="mt-4 text-muted-foreground h-6 text-sm">{status}</p>
+                </CardContent>
+            </Card>
         </div>
     );
 }

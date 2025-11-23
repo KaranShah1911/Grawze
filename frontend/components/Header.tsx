@@ -24,6 +24,9 @@ export default function Header() {
         <Link href="/developers" className="text-sm font-medium px-3 py-2 rounded-md hover:bg-secondary" prefetch={false}>
           Developers
         </Link>
+        <Link href="/network" className="text-sm font-medium px-3 py-2 rounded-md hover:bg-secondary" prefetch={false}>
+          Network
+        </Link>
         <div className="pl-4">
           <ConnectButton />
         </div>

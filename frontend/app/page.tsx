@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ShieldCheck, Bot, BarChart, Zap, ShieldAlert, BrainCircuit } from 'lucide-react';
-import { ConnectWalletButton } from '@/components/ConnectWalletButton';
 import AnimatedGridBackground from '@/components/AnimatedGridBackground';
 
 export default function Home() {
@@ -19,7 +18,6 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-6 flex justify-center gap-4">
-              <ConnectWalletButton />
               <Link href="/dashboard">
                 <Button size="lg" variant="outline">View Dashboard</Button>
               </Link>
@@ -123,9 +121,6 @@ export default function Home() {
             <p className="mt-4 text-muted-foreground md:text-xl/relaxed">
               Don't wait for a security breach. Connect your wallet today and experience the peace of mind that comes with AI-powered protection.
             </p>
-            <div className="mt-6">
-              <ConnectWalletButton />
-            </div>
           </div>
         </div>
       </section>
