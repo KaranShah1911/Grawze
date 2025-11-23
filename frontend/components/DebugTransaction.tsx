@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useAccount, useConnect, useDisconnect, useWalletClient } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { X } from 'lucide-react';
 
 interface DebugTransactionProps {
     onClose: () => void;
@@ -17,6 +21,8 @@ export default function DebugTransaction({ onClose }: DebugTransactionProps) {
     const [toAddr, setToAddr] = useState('');
     const [amount, setAmount] = useState('');
     const [status, setStatus] = useState('');
+    const [prediction, setPrediction] = useState<{ risk_score: number; alert: string } | null>(null);
+    const [showConfirmation, setShowConfirmation] = useState(false);
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
 
     useEffect(() => {
@@ -43,11 +49,11 @@ export default function DebugTransaction({ onClose }: DebugTransactionProps) {
         }
     };
 
-    const debugAndSend = async () => {
+    const handleAnalyzeTransaction = async () => {
         if (!toAddr || !amount) return alert("Fill all fields");
         if (!provider || !walletClient || !address) return alert("Wallet not connected properly");
 
-        setStatus("Fetching Data from Blockchain...");
+        setStatus("Analyzing transaction with AI...");
 
         try {
             const valWei = ethers.parseEther(amount);
@@ -71,73 +77,116 @@ export default function DebugTransaction({ onClose }: DebugTransactionProps) {
                 timestamp: Math.floor(Date.now() / 1000)
             };
 
-            console.clear();
-            console.log("%c✅ THIS IS THE DATA YOUR FRONTEND WILL SEND:", "color: #0f0; font-size: 16px;");
-            console.log(JSON.stringify(dataForModel, null, 4));
-            console.log("Data received! Now sending transaction...");
+            const response = await fetch('http://localhost:8000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataForModel),
+            });
 
-            setStatus("Check Console! Sending Transaction...");
-
-            const val = 1;
-            if (val) {
-                const txHash = await walletClient.sendTransaction({
-                    to: toAddr as `0x${string}`,
-                    value: valWei,
-                    gasLimit: gasLimit
-                });
-                setStatus("Tx Sent! Hash: " + txHash);
-                await provider.waitForTransaction(txHash);
-                setStatus("Transaction Confirmed! Money Moved.");
-            } else {
-                console.log("Debug Mode: Transaction not sent.");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Prediction failed');
             }
+
+            const predictionResult = await response.json();
+            setPrediction(predictionResult);
+            setShowConfirmation(true);
+            setStatus(''); // Clear status, confirmation modal will show info
 
         } catch (err: any) {
             console.error(err);
-            setStatus("Error: " + err.message);
+            setStatus("Error analyzing transaction: " + err.message);
+        }
+    };
+
+    const handleConfirmSend = async () => {
+        if (!toAddr || !amount || !provider || !walletClient) return;
+
+        setShowConfirmation(false);
+        setStatus("Sending transaction...");
+
+        try {
+            const valWei = ethers.parseEther(amount);
+            const txHash = await walletClient.sendTransaction({
+                to: toAddr as `0x${string}`,
+                value: valWei,
+            });
+            setStatus("Transaction sent! Hash: " + txHash.slice(0, 10) + "...");
+            await provider.waitForTransaction(txHash);
+            setStatus("✅ Transaction Confirmed!");
+        } catch (err: any) {
+            console.error(err);
+            setStatus("Error sending transaction: " + err.message);
         }
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-gray-900 text-white font-sans text-center p-8 rounded-lg shadow-lg max-w-lg w-full relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
-                <h1 className="text-3xl font-bold mb-4">🛠️ Data & Wallet Debugger</h1>
-                <p className="mb-6">This tool bypasses the AI Model completely.</p>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+            <Card className="w-full max-w-md relative">
+                <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4">
+                    <X className="h-4 w-4" />
+                </Button>
+                <CardHeader className="text-center">
+                    <CardTitle className="text-2xl font-bold">Make a Transaction</CardTitle>
+                    <CardDescription>Leveraging our AI Model to risk out your transaction with fraudulent.</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                    {!isConnected ? (
+                        <Button onClick={handleConnect} size="lg">
+                            Connect MetaMask
+                        </Button>
+                    ) : (
+                        <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">Connected as <span className="font-mono text-primary">{address ? `${address.substring(0, 6)}...${address.slice(-4)}` : ''}</span></p>
+                            <Input
+                                type="text"
+                                value={toAddr}
+                                onChange={(e) => setToAddr(e.target.value)}
+                                placeholder="Receiver Address (0x...)"
+                            />
+                            <Input
+                                type="text"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="Amount (ETH)"
+                            />
+                            <Button onClick={handleAnalyzeTransaction} className="w-full" size="lg">
+                                Analyze Transaction
+                            </Button>
+                        </div>
+                    )}
+                    <p className="mt-4 text-muted-foreground h-6 text-sm">{status}</p>
 
-                {!isConnected ? (
-                    <button onClick={handleConnect} className="px-6 py-3 text-lg cursor-pointer bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
-                        Connect MetaMask
-                    </button>
-                ) : (
-                    <div className="space-y-4">
-                        <p>Connected: <span className="text-cyan-400">{address ? `${address.substring(0, 6)}...` : ''}</span></p>
-                        
-                        <input 
-                            type="text" 
-                            value={toAddr}
-                            onChange={(e) => setToAddr(e.target.value)}
-                            placeholder="Receiver Address (0x...)" 
-                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        <input 
-                            type="text" 
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Amount (ETH)" 
-                            className="w-full p-3 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        
-                        <button onClick={debugAndSend} className="w-full py-3 bg-green-600 text-white rounded-md text-lg cursor-pointer hover:bg-green-700 transition-colors">
-                            Print Data & Send Money 🚀
-                        </button>
-                        
-                        <p className="text-sm text-yellow-400">⚠️ Open Console (F12) to see the Data!</p>
-                    </div>
-                )}
-
-                <p className="mt-6 text-gray-400 h-6">{status}</p>
-            </div>
+                    {showConfirmation && prediction && (
+                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+                            <Card className="w-full max-w-sm">
+                                <CardHeader>
+                                    <CardTitle>Transaction Risk</CardTitle>
+                                    <CardDescription>
+                                        Our AI has analyzed your transaction. Do you want to proceed?
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-center space-y-4">
+                                    <div className={`text-5xl font-bold ${prediction.alert === 'CRITICAL' ? 'text-red-500' : 'text-green-500'}`}>
+                                        {prediction.risk_score}%
+                                    </div>
+                                    <p className={`font-semibold ${prediction.alert === 'CRITICAL' ? 'text-red-500' : 'text-green-500'}`}>
+                                        {prediction.alert === 'CRITICAL' ? 'High Risk' : 'Low Risk'}
+                                    </p>
+                                    <div className="flex justify-around pt-4">
+                                        <Button variant="destructive" onClick={() => setShowConfirmation(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button variant="default" onClick={handleConfirmSend}>
+                                            Proceed
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }
