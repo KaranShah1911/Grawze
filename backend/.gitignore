@@ -1,0 +1,11 @@
+# Python virtual environment
+myenv/
+
+# Python cache
+__pycache__/
+
+# Optional common Python ignores
+*.pyc
+*.pyo
+*.pyd
+.env
